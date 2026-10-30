@@ -1,0 +1,15 @@
+# PlatformIO
+.pio/
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# RL training output (big files)
+control/rl/runs/
+control/rl/checkpoints/
+
+# Editors / OS
+.vscode/
+.DS_Store
