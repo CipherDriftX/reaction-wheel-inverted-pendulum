@@ -1,0 +1,77 @@
+<!--
+  Reaction wheel inverted pendulum, MuJoCo model.
+
+  Geometry comes from cad/build.py (default parameters):
+    pivot axis:  x = 0, z = 230 mm (PIVOT_Z), along Y
+    wheel axis:  150 mm above the pivot (L), along Y
+  Meshes are in mm, in the same world position as the CAD, so each mesh geom
+  is shifted back by its body's world position.
+  If you change build.py, update the numbers here and re-export the meshes.
+
+  Joints:
+    dof_pivot  arm swings on the pivot. 0 = upright, pi = hanging down.
+    dof_wheel  wheel spins on the motor shaft.
+
+  Masses come from mesh volume x density. Printed parts use solid PLA,
+  so they are heavier than real prints with infill.
+-->
+<mujoco model="reaction_wheel_pendulum">
+  <compiler angle="radian" meshdir="meshes"/>
+  <option timestep="0.001" integrator="RK4" gravity="0 0 -9.81"/>
+
+  <default>
+    <!-- parts overlap where they are bolted together: no collisions -->
+    <geom type="mesh" contype="0" conaffinity="0"/>
+    <!-- exact: true volume of shapes with holes (default overestimates) -->
+    <mesh scale="0.001 0.001 0.001" inertia="exact"/>
+  </default>
+
+  <asset>
+    <mesh name="base_box"        file="base_box.stl"/>
+    <mesh name="upright"         file="upright.stl"/>
+    <mesh name="sensor_bracket"  file="sensor_bracket.stl"/>
+    <mesh name="bearings_608"    file="bearings_608.stl"/>
+    <mesh name="arm"             file="arm.stl"/>
+    <mesh name="pivot_shaft_8mm" file="pivot_shaft_8mm.stl"/>
+    <mesh name="magnet_6x2.5"    file="magnet_6x2.5.stl"/>
+    <mesh name="motor_nidec_24h" file="motor_nidec_24h.stl"/>
+    <mesh name="wheel"           file="wheel.stl"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.3 -0.6 0.8" dir="-0.3 0.6 -0.6"/>
+
+    <!-- Fixed parts: no joint, so they are welded to the world. -->
+    <geom mesh="base_box"       rgba="0.6 0.6 0.6 1"/>
+    <geom mesh="upright"        rgba="0.27 0.51 0.71 1"/>
+    <geom mesh="sensor_bracket" rgba="0.1 0.6 0.2 1"/>
+    <geom mesh="bearings_608"   rgba="0.8 0.8 0.82 1"/>
+
+    <!-- Arm: everything clamped to the pivot shaft swings together. -->
+    <body name="arm" pos="0 0 0.230">
+      <joint name="dof_pivot" type="hinge" axis="0 1 0"/>
+      <geom mesh="arm"             pos="0 0 -0.230" density="1240" rgba="1 0.55 0 1"/>
+      <geom mesh="pivot_shaft_8mm" pos="0 0 -0.230" density="7850" rgba="0.8 0.8 0.82 1"/>
+      <geom mesh="magnet_6x2.5"    pos="0 0 -0.230" density="7500" rgba="0.5 0.2 0.7 1"/>
+      <!-- PLACEHOLDER mass: weigh the real Nidec 24H and put the number here. -->
+      <geom mesh="motor_nidec_24h" pos="0 0 -0.230" mass="0.1" rgba="0.1 0.1 0.1 1"/>
+
+      <!-- Wheel: spins on the motor shaft, L = 150 mm above the pivot. -->
+      <body name="wheel" pos="0 0 0.150">
+        <joint name="dof_wheel" type="hinge" axis="0 1 0"/>
+        <geom mesh="wheel" pos="0 0 -0.380" density="1240" rgba="0.85 0.1 0.1 1"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- Motor torque on the wheel (N·m). The arm feels the opposite torque.
+         No limit yet: take the real one from the Nidec 24H datasheet. -->
+    <motor name="wheel_motor" joint="dof_wheel" gear="1"/>
+  </actuator>
+
+  <sensor>
+    <jointpos name="pivot_angle" joint="dof_pivot"/>  <!-- AS5600 -->
+    <jointvel name="wheel_speed" joint="dof_wheel"/>  <!-- motor encoder -->
+  </sensor>
+</mujoco>
