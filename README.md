@@ -1,4 +1,4 @@
-# reaction-wheel-inverted-pendulum
+# Reaction Wheel Inverted Pendulum
 
 A pendulum that balances itself upright by spinning a wheel at its top.
 Built first in software (Onshape, MuJoCo, PlatformIO, Wokwi), then in real parts.
