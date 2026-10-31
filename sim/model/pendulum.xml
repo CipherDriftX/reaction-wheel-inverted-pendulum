@@ -60,16 +60,22 @@
 
       <!-- Wheel: spins on the motor shaft, L = 150 mm above the pivot. -->
       <body name="wheel" pos="0 0 0.150">
-        <joint name="dof_wheel" type="hinge" axis="0 1 0"/>
+        <!-- damping: motor bearing friction, wheel coasts down in ~15 s (0.000146 / 0.00001).
+             GUESS. Measure later: spin the real wheel, time how long it takes to stop. -->
+        <joint name="dof_wheel" type="hinge" axis="0 1 0" damping="0.00001"/>
         <geom mesh="wheel" pos="0 0 -0.380" density="1240" rgba="0.85 0.1 0.1 1"/>
       </body>
     </body>
   </worldbody>
 
   <actuator>
-    <!-- Motor torque on the wheel (N·m). The arm feels the opposite torque.
-         No limit yet: take the real one from the Nidec 24H datasheet. -->
-    <motor name="wheel_motor" joint="dof_wheel" gear="1"/>
+    <!-- DC motor on the wheel. The arm feels the opposite torque.
+         torque = 0.2 x ctrl - 0.0005 x wheel_speed      (ctrl from -1 to +1)
+         Full 0.2 N·m when the wheel is still, zero at 0.2 / 0.0005 = 400 rad/s (top speed).
+         The speed part is back-EMF: a spinning motor fights its own drive.
+         0.2 and 400 are GUESSES until the Nidec 24H datasheet. -->
+    <general name="wheel_motor" joint="dof_wheel" ctrlrange="-1 1"
+             gainprm="0.2" biastype="affine" biasprm="0 0 -0.0005"/>
   </actuator>
 
   <sensor>
